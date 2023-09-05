@@ -3289,24 +3289,13 @@ $invalid_pass = $true
 # Get input password if the admin account does not already exist
 $NewLocalAdminExists = Get-LocalUser -Name $NewLocalAdmin -ErrorAction SilentlyContinue
 if ($NewLocalAdminExists.Count -eq 0) {
-    do {
-        Write-Info "I will create a new Administrator account, you need to specify the new account password."
-        Write-Info "Your password must contain at least 15 characters, capital letters, numbers and symbols"
+ 
+        $password = Get-RandomPassword 16
+        Write-Info "Created random password for $NewLocalAdmin : $password"
         
-        Write-Info "Please enter the new password:"
-        $temp_pass1 = Read-Host
-        Write-Info "Please repeat the new password:"
-        $temp_pass2 = Read-Host 
+            $NewLocalAdminPassword = ConvertTo-SecureString $password -AsPlainText -Force 
         
-        $invalid_pass = ValidatePasswords $temp_pass1 $temp_pass2 
-        if($invalid_pass -eq $false) {
-            Write-Error "Your passwords do not match or do not follow the minimum complexity requirements, try again."
-        } 
-        else {
-            $NewLocalAdminPassword = ConvertTo-SecureString $temp_pass1 -AsPlainText -Force 
-        }
-    } while($invalid_pass -eq $false)
-}
+ }
 
 $location = Get-Location
     
@@ -3336,3 +3325,50 @@ Write-After "Completed. Logs written to: $location"
     
 
 $host.UI.RawUI.ForegroundColor = $fc
+
+
+
+function Get-RandomPassword {
+    param (
+        [Parameter(Mandatory)]
+        [ValidateRange(4,[int]::MaxValue)]
+        [int] $length,
+        [int] $upper = 1,
+        [int] $lower = 1,
+        [int] $numeric = 1,
+        [int] $special = 1
+    )
+    if($upper + $lower + $numeric + $special -gt $length) {
+        throw "number of upper/lower/numeric/special char must be lower or equal to length"
+    }
+    $uCharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    $lCharSet = "abcdefghijklmnopqrstuvwxyz"
+    $nCharSet = "0123456789"
+    $sCharSet = "/*-+,!?=()@;:._"
+    $charSet = ""
+    if($upper -gt 0) { $charSet += $uCharSet }
+    if($lower -gt 0) { $charSet += $lCharSet }
+    if($numeric -gt 0) { $charSet += $nCharSet }
+    if($special -gt 0) { $charSet += $sCharSet }
+    
+    $charSet = $charSet.ToCharArray()
+    $rng = New-Object System.Security.Cryptography.RNGCryptoServiceProvider
+    $bytes = New-Object byte[]($length)
+    $rng.GetBytes($bytes)
+ 
+    $result = New-Object char[]($length)
+    for ($i = 0 ; $i -lt $length ; $i++) {
+        $result[$i] = $charSet[$bytes[$i] % $charSet.Length]
+    }
+    $password = (-join $result)
+    $valid = $true
+    if($upper   -gt ($password.ToCharArray() | Where-Object {$_ -cin $uCharSet.ToCharArray() }).Count) { $valid = $false }
+    if($lower   -gt ($password.ToCharArray() | Where-Object {$_ -cin $lCharSet.ToCharArray() }).Count) { $valid = $false }
+    if($numeric -gt ($password.ToCharArray() | Where-Object {$_ -cin $nCharSet.ToCharArray() }).Count) { $valid = $false }
+    if($special -gt ($password.ToCharArray() | Where-Object {$_ -cin $sCharSet.ToCharArray() }).Count) { $valid = $false }
+ 
+    if(!$valid) {
+         $password = Get-RandomPassword $length $upper $lower $numeric $special
+    }
+    return $password
+}
