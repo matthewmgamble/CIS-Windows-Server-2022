@@ -23,7 +23,8 @@ $AllowRDPFromLocalAccount = $true;            # CIS 2.2.26 - Set to true to oppo
 $AllowRDPClipboard = $true;                   # CIS 18.9.65.3.3.3 - Set to true to oppose CIS recommendation and allow drive redirection so that copy/paste works to RDP sessions. This enables "Drive Redirection" feature so copy and paste in an RDP is allowed. A CIS audit will report this as not being implemented, but you will be able to copy/paste into an RDP session. (TerminalServicesfDisableCdm)
 $AllowDefenderMAPS = $true;                   # CIS 18.9.47.4.2 - Set to true to oppose CIS recommendation and enable MAPS. CIS recommends disabling MAPs, but this reduces security by limiting cloud protection. Setting this true enables MAPs against the CIS recommendation. A CIS audit will report this as not being implemented, but you will receive better AV protection by going against the CIS recommendation. (SpynetReporting)
 $AllowStoringPasswordsForTasks = $true        # CIS 2.3.10.4 - Set to true to oppose CIS recommendation and allow storing of passwords. CIS recommends disabling storage of passwords. However, this also prevents storing passwords required to run local batch jobs in the task scheduler. Setting this to true will disable this config. A CIS audit will report this as not being implemented, but saving passwords will be possible. (DisableDomainCreds)
-$AllowAccessToSMBWithDifferentSPN = $true     # CIS 2.3.9.5 - Set to true to oppose CIS recommendation and allow SMB over unknown SPN. CIS recommends setting SPN validation to "Accept if provided by client." This can cause issues if you attempt to access a share using a different DNS name than the server currently recognizes. IE: If you have a non-domain joined computer and you access it using a DNS name that the server doesn't realize points to it, then the server will reject the connection. EG: Say you connect to "myserver.company.com", but the server's local name is just "myserver" and the server has no knowledge that it is also called "myserver.company.com" then the connection will be denied. (LanManServerSmbServerNameHardeningLevel)
+## Chaged from default - we don't want to allow this
+$AllowAccessToSMBWithDifferentSPN = $false     # CIS 2.3.9.5 - Set to true to oppose CIS recommendation and allow SMB over unknown SPN. CIS recommends setting SPN validation to "Accept if provided by client." This can cause issues if you attempt to access a share using a different DNS name than the server currently recognizes. IE: If you have a non-domain joined computer and you access it using a DNS name that the server doesn't realize points to it, then the server will reject the connection. EG: Say you connect to "myserver.company.com", but the server's local name is just "myserver" and the server has no knowledge that it is also called "myserver.company.com" then the connection will be denied. (LanManServerSmbServerNameHardeningLevel)
 $DontSetEnableLUAForVeeamBackup = $false       # CIS 2.3.17.6 - Set to true to oppose CIS recommendation and don't run all admins in Admin Approval Mode. CIS recommends setting this registry value to 1 so that all Admin users including the built in account must run in Admin Approval Mode (UAC popup always when running admin). However, this breaks Veeam Backup. See: https://www.veeam.com/kb4185
 $DontSetTokenFilterPolicyForPSExec = $false    # CIS 18.3.1 - Set to true to oppose CIS recommendation and don't set require UAC for admins logging in over a network. Highly recommended to leave this $false unless you are legitimately using PSExec for any reason on the server. In addition, EnableLUA should also be disabled. See https://www.brandonmartinez.com/2013/04/24/resolve-access-is-denied-using-psexec-with-a-local-admin-account/
 
@@ -33,10 +34,10 @@ $DontSetTokenFilterPolicyForPSExec = $false    # CIS 18.3.1 - Set to true to opp
 #########################################################
 $AttackSurfaceReductionExclusions = @(
     # Folder Example
-    "C:\Program Files\RMM"
+    #"C:\Program Files\RMM"
     
     # File Example
-    "C:\some\folder\some.exe"
+   # "C:\some\folder\some.exe"
 )
 
 #########################################################
@@ -44,15 +45,15 @@ $AttackSurfaceReductionExclusions = @(
 # Add additional users that should not have a specific right to increase the hardening of this script.
 #########################################################
 $AdditionalUsersToDenyNetworkAccess = @(      #CIS 2.2.21 - This adds additional users to the "Deny access to this computer from the network" to add more than guest and built-in admin
-  "batchuser"
+  #"batchuser"
 )
 $AdditionalUsersToDenyRemoteDesktopServiceLogon = @(  #CIS 2.2.26 - This adds additional users to the "Deny log on through Remote Desktop Services" if you want to exclude more than just the guest user
-  "batchuser"
-  ,"batchadmin"
+ # "batchuser"
+ # ,"batchadmin"
 )
 $AdditionalUsersToDenyLocalLogon = @(         #CIS 2.2.24 - This adds additional users to the "Deny log on locally" if you want to exclude more than just the "guest" user.
-  "batchuser"
-  ,"batchadmin"
+ # "batchuser"
+ # ,"batchadmin"
 )
 
 #########################################################
@@ -149,8 +150,9 @@ $ExecutionList = @(
     "RequireCtlAltDel",                                                 #2.3.7.1
     "DontDisplayLastSigned",                                            #2.3.7.2
     "MachineInactivityLimit",                                           #2.3.7.3
-    "LogonLegalNotice",                                                 #2.3.7.4
-    "LogonLegalNoticeTitle",                                            #2.3.7.5
+    ## These are disabled in Azure because they break bastion access to the machine
+    #"LogonLegalNotice",                                                 #2.3.7.4
+    #"LogonLegalNoticeTitle",                                            #2.3.7.5
     "PreviousLogonCache",                                               #2.3.7.6
     "PromptUserPassExpiration",                                         #2.3.7.7
     "RequireDomainControllerAuth",                                      #2.3.7.8
