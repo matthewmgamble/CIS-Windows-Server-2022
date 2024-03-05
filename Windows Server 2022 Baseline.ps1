@@ -2136,10 +2136,11 @@ function SecurityWarningLevel {
     SetRegistry "HKLM:\SYSTEM\CurrentControlSet\Services\Eventlog\Security" "WarningLevel" "90" $REG_DWORD
 }
 
+## Disable DNS over HTTPS support (policy devation)
 function EnableDNSOverDoH {
     #18.5.4.1 => Computer Configuration\Policies\Administrative Templates\Network\DNS Client\Configure DNS over HTTPS (DoH) name resolution
     Write-Info "18.5.4.1 (L1) Ensure 'Configure DNS over HTTPS (DoH) name resolution' is set to 'Enabled: Allow DoH' or higher"
-    SetRegistry "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" "DoHPolicy" "3" $REG_DWORD
+    SetRegistry "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" "DoHPolicy" "1" $REG_DWORD
 }
 
 function EnableMulticast {
